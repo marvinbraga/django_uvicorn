@@ -85,22 +85,16 @@ class AsyncCreatePersonAPIView(View):
 
     @sync_to_async
     def create_persons(self):
-        logger.debug("Executando...")
         for i in range(1000):
             Person.objects.create(name=f'Person {i}', age=i)
-        logger.debug("Finalizado...")
 
     async def create_bulk(self, request):
-        logger.debug("Iniciando a criação...")
         await self.create_persons()
         return {"message": "1000 persons created"}
 
     async def get(self, request, *args, **kwargs):
-        logger.debug("Cheguei no GET...")
-        logger.debug("Iniciando...")
         async with aiohttp.ClientSession() as session:
             tasks = [self.create_bulk(request)]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        logger.debug("Finalizando...")
         return JsonResponse({"results": results})
