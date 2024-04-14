@@ -1,5 +1,6 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 from time import sleep
 
 import aiohttp
@@ -35,26 +36,27 @@ class CheckPersonAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+def thread_pool(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        with ThreadPoolExecutor() as executor:
+            future = executor.submit(func, *args, **kwargs)
+            response = future.result()
+        return response
+
+    return wrapper
+
+
 class CreatePersonAPIView(APIView):
 
-    def create_persons(self):
+    @thread_pool
+    def get(self, request, *args, **kwargs):
         logger.debug("Executando...")
         for i in range(1000):
             Person.objects.create(name=f'Person {i}', age=i)
-            sleep(0.5)
+            sleep(0.2)
         logger.debug("Finalizado...")
-
-    def create_bulk(self, request):
-        logger.debug("Iniciando a criação...")
-        self.create_persons()
         return Response({"message": "1000 persons created"}, status=status.HTTP_201_CREATED)
-
-    def get(self, request, *args, **kwargs):
-        logger.debug("Cheguei no GET...")
-        with ThreadPoolExecutor() as executor:
-            future = executor.submit(self.create_bulk, request)
-            response = future.result()
-        return response
 
 
 class AsyncFetchDataAPIView(View):
@@ -93,8 +95,7 @@ class AsyncCreatePersonAPIView(View):
         return {"message": "1000 persons created"}
 
     async def get(self, request, *args, **kwargs):
-        async with aiohttp.ClientSession() as session:
-            tasks = [self.create_bulk(request)]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+        tasks = [self.create_bulk(request)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         return JsonResponse({"results": results})
