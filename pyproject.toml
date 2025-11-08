@@ -7,12 +7,19 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+django = "^4.2.0"
 djangorestframework = "^3.14.0"
 uvicorn = "^0.20.0"
 channels = "^4.0.0"
 loguru = "^0.7.2"
 aiohttp = "^3.9.4"
+python-dotenv = "^1.0.0"
+django-cors-headers = "^4.3.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-django = "^4.5.0"
+pytest-asyncio = "^0.21.0"
 
 [build-system]
 requires = ["poetry-core"]
